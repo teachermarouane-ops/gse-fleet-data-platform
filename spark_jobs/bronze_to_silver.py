@@ -14,7 +14,7 @@ def create_spark_session():
     spark = (
         SparkSession.builder
         .appName("BronzeToSilver")
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
+        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4")
         .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")
         .config("spark.hadoop.fs.s3a.access.key", "minioadmin")
         .config("spark.hadoop.fs.s3a.secret.key", "minioadmin123")
