@@ -1,0 +1,16 @@
+checks for bronze_telemetry:
+  - row_count > 0
+
+  - missing_count(equipment_id) = 0
+  - missing_count(equipment_type) = 0
+  - missing_count(timestamp) = 0
+  - missing_count(engine_hours) = 0
+  - missing_count(temperature_c) = 0
+
+  - schema:
+      name: bronze schema check
+      fail:
+        when required column missing: [equipment_id, equipment_type, timestamp, engine_hours, temperature_c, fault_code]
+
+  - invalid_count(equipment_id) = 0:
+      valid regex: ^(TOW|BELT|GPU)-\d{3}$

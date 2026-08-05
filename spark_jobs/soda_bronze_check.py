@@ -19,13 +19,9 @@ def run_bronze_quality_scan():
     scan.set_data_source_name("spark_df")
     scan.add_spark_session(spark, data_source_name="spark_df")
 
-    checks_yaml = """
-    checks for bronze_telemetry:
-      - row_count > 0
-      - missing_count(equipment_id) = 0
-      - missing_count(timestamp) = 0
-    """
-    scan.add_sodacl_yaml_str(checks_yaml)
+    # Load checks from the standalone data contract file instead of an inline string
+    contract_path = os.path.join(os.path.dirname(__file__), "checks", "bronze_contract.yml")
+    scan.add_sodacl_yaml_file(contract_path)
 
     scan.execute()
 
