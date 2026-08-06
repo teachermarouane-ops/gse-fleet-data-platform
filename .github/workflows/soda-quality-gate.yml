@@ -1,0 +1,63 @@
+name: Bronze Data Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  soda-check:
+    runs-on: ubuntu-latest
+
+    services:
+      minio:
+        image: minio/minio
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin123
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          pip install pyspark==3.5.9 soda-core==3.5.6 soda-core-spark-df==3.5.6
+
+      - name: Install MinIO client
+        run: |
+          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/mc
+
+      - name: Wait for MinIO and seed bronze bucket
+        run: |
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb local/bronze
+          echo '{"equipment_id": "TOW-001", "equipment_type": "tow_tractor", "timestamp": "2026-01-01T00:00:00+00:00", "engine_hours": 100.0, "temperature_c": 70.0, "fault_code": null}' > valid_record.json
+          echo '{"equipment_id": "BAD-ID", "timestamp": "2026-01-01T00:00:00+00:00", "engine_hours": 100.0, "temperature_c": 70.0, "fault_code": null}' > invalid_record.json
+          mc cp valid_record.json local/bronze/valid_record.json
+          mc cp invalid_record.json local/bronze/invalid_record.json
+
+      - name: Run Soda bronze data contract check
+        run: |
+          python3 spark_jobs/soda_bronze_check.py
