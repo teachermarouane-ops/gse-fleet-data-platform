@@ -29,7 +29,12 @@ def run_bronze_quality_scan():
     print("\n--- CHECK RESULTS ---")
     print(scan.get_scan_results())
 
+
+    scan_failed = scan.has_check_fails()
     spark.stop()
+
+    if scan_failed:
+        sys.exit(1)
 
 if __name__ == "__main__":
     run_bronze_quality_scan()
