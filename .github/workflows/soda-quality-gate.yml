@@ -26,8 +26,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python dependencies
-        run: |
-          pip install pyspark==3.5.9 soda-core==3.5.6 soda-core-spark-df==3.5.6
+        run: pip install pyspark==3.5.9 soda-core==3.5.6 soda-core-spark-df==3.5.6
 
       - name: Install MinIO client
         run: |
@@ -35,24 +34,23 @@ jobs:
           chmod +x mc
           sudo mv mc /usr/local/bin/mc
 
-      - name: Start MinIO manually
-        run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin123 \
-            minio/minio server /data
+      - name: Start MinIO via docker-compose
+        run: docker compose up -d minio
 
-          echo "Waiting for MinIO to become ready..."
-          for i in $(seq 1 20); do
+      - name: Wait for MinIO to be ready
+        run: |
+          for i in $(seq 1 30); do
             if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
               echo "MinIO is ready."
-              break
+              exit 0
             fi
-            echo "Not ready yet, retrying in 2s..."
+            echo "Waiting for MinIO... ($i)"
             sleep 2
           done
+          echo "MinIO did not become ready in time."
+          docker ps
+          docker logs minio
+          exit 1
 
       - name: Seed bronze bucket
         run: |
@@ -64,5 +62,4 @@ jobs:
           mc cp invalid_record.json local/bronze/invalid_record.json
 
       - name: Run Soda bronze data contract check
-        run: |
-          python3 spark_jobs/soda_bronze_check.py
+        run: python3 spark_jobs/soda_bronze_check.py
