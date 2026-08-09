@@ -10,20 +10,6 @@ jobs:
   soda-check:
     runs-on: ubuntu-latest
 
-    services:
-      minio:
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -49,7 +35,26 @@ jobs:
           chmod +x mc
           sudo mv mc /usr/local/bin/mc
 
-      - name: Wait for MinIO and seed bronze bucket
+      - name: Start MinIO manually
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            minio/minio server /data
+
+          echo "Waiting for MinIO to become ready..."
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
+              echo "MinIO is ready."
+              break
+            fi
+            echo "Not ready yet, retrying in 2s..."
+            sleep 2
+          done
+
+      - name: Seed bronze bucket
         run: |
           mc alias set local http://localhost:9000 minioadmin minioadmin123
           mc mb local/bronze
