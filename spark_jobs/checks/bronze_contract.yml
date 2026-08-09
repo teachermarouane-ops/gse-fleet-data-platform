@@ -14,3 +14,6 @@ checks for bronze_telemetry:
 
   - invalid_count(equipment_id) = 0:
       valid regex: ^(TOW|BELT|GPU)-\d{3}$
+
+  # Freshness check - catches "silent staleness" if the pipeline stops receiving new data
+  - freshness(timestamp) < 1d

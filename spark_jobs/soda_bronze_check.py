@@ -1,4 +1,5 @@
 import sys
+from pyspark.sql.functions import to_timestamp, col
 import os
 
 # Reuse the existing Spark session setup instead of duplicating MinIO config
@@ -12,6 +13,7 @@ def run_bronze_quality_scan():
 
     # Read the same bronze data bronze_to_silver.py reads
     df = spark.read.json(BRONZE_PATH)
+    df = df.withColumn("timestamp", to_timestamp(col("timestamp")))
     df.createOrReplaceTempView("bronze_telemetry")
 
     scan = Scan()
