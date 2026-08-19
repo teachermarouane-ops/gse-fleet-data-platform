@@ -1,0 +1,17 @@
+checks for technician_logs:
+  - row_count > 0
+  - missing_count(technician_id) = 0
+  - missing_count(equipment_id) = 0
+  - missing_count(action) = 0
+  - missing_count(timestamp) = 0
+  - invalid_count(equipment_id) = 0:
+      valid regex: ^(TOW|BELT|GPU)-\d{3}$
+
+checks for scheduling:
+  - row_count > 0
+  - missing_count(equipment_id) = 0
+  - missing_count(scheduled_date) = 0
+  - missing_count(task_type) = 0
+  - missing_count(status) = 0
+  - invalid_count(equipment_id) = 0:
+      valid regex: ^(TOW|BELT|GPU)-\d{3}$
