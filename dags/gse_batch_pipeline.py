@@ -18,3 +18,10 @@ with DAG(
         task_id="generate_batch_data",
         bash_command=f"cd {PROJECT_DIR} && {PYTHON_BIN} producer/batch_data_generator.py",
     )
+
+    soda_batch_check = BashOperator(
+        task_id="soda_batch_check",
+        bash_command=f"cd {PROJECT_DIR} && {PYTHON_BIN} spark_jobs/soda_batch_check.py",
+    )
+
+    generate_batch_data >> soda_batch_check
