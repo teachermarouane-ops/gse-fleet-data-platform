@@ -73,14 +73,23 @@ airflow db migrate
 ```
 
 ### 4. Start Airflow (every session)
+
+**Before running this step**, find your Codespace's actual forwarded URL for port 8080:
+1. In VS Code, open the **Ports** tab (next to Terminal)
+2. Find the row for port **8080**
+3. Copy the full address shown under "Forwarded Address" (it looks like `https://your-codespace-name-8080.app.github.dev`)
+
+Then run, replacing the placeholder below with the URL you just copied — do not paste the placeholder text as-is, it is not a real URL:
+
 ```bash
 cd ~/airflow
 source airflow_venv/bin/activate
-export AIRFLOW__API__BASE_URL="<your Codespace's forwarded URL for port 8080>"
+export AIRFLOW__API__BASE_URL="https://your-codespace-name-8080.app.github.dev"
 export AIRFLOW__CORE__EXECUTION_API_SERVER_URL="http://localhost:8080/execution/"
 airflow standalone
 ```
-Note: the two environment variables above are required — without them, Airflow's login will fail (URL mismatch) and background tasks can get stuck (internal traffic routed incorrectly). The standalone command prints an auto-generated admin password on first run; save it.
+
+Note: the two environment variables above are required — without them, Airflow's login will fail (URL mismatch) and background tasks can get stuck (internal traffic routed incorrectly). If you skip this step or use the wrong URL, the Airflow page will load blank in the browser. The standalone command prints an auto-generated admin password on first run; save it.
 
 ### 5. Open the Airflow UI
 - In the Codespace's **Ports** tab, open port **8080** in your browser
