@@ -48,3 +48,45 @@ This platform is functionally complete for its core data engineering scope:
 ## Author
 
 Marouane — Maintenance & Operations Manager  ( Data Scientist & Data Engineer ).
+
+## How to Run This Project
+
+This project was developed and run inside a **GitHub Codespace** (a cloud dev environment tied to this repo). To reproduce it:
+
+### 1. Open the Codespace
+- On this repo's GitHub page, click **Code → Codespaces → Create codespace on main** (or reopen an existing one)
+
+### 2. Start the streaming infrastructure
+```bash
+./start.sh
+```
+This starts Kafka, Zookeeper, and MinIO via Docker Compose.
+
+### 3. Set up Airflow (first time only)
+```bash
+mkdir -p ~/airflow
+cd ~/airflow
+python3 -m venv airflow_venv
+source airflow_venv/bin/activate
+pip install apache-airflow==3.1.0
+airflow db migrate
+```
+
+### 4. Start Airflow (every session)
+```bash
+cd ~/airflow
+source airflow_venv/bin/activate
+export AIRFLOW__API__BASE_URL="<your Codespace's forwarded URL for port 8080>"
+export AIRFLOW__CORE__EXECUTION_API_SERVER_URL="http://localhost:8080/execution/"
+airflow standalone
+```
+Note: the two environment variables above are required — without them, Airflow's login will fail (URL mismatch) and background tasks can get stuck (internal traffic routed incorrectly). The standalone command prints an auto-generated admin password on first run; save it.
+
+### 5. Open the Airflow UI
+- In the Codespace's **Ports** tab, open port **8080** in your browser
+- Log in with the printed admin credentials
+- Both `gse_bronze_pipeline` (hourly) and `gse_batch_pipeline` (daily) should appear and can be triggered manually or left to run on schedule
+
+### Notes
+- Docker containers and the Airflow process stop when the Codespace goes idle — repeat steps 2 and 4 each new session (step 3 is one-time only)
+- If Kafka fails to restart with a ZooKeeper error, run `docker-compose restart zookeeper kafka` together
